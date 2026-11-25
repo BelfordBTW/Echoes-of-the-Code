@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05060d">
+<meta name="description" content="Эхо кода (Echoes of the Code) — 2D-платформер с элементами головоломки и стелса в киберпанк-сеттинге. Прототип.">
+<title>Эхо кода — Echoes of the Code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="game" width="480" height="270"></canvas>
+  <div id="crt" class="crt"></div>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-left">
+      <div class="hud-hp" id="hud-hp"></div>
+      <div class="hud-energy"><span class="lbl">ВРЕМЯ</span><div class="bar"><i id="hud-energy"></i></div></div>
+    </div>
+    <div class="hud-center">
+      <div class="hud-level" id="hud-level">СЕКТОР 1</div>
+      <div class="hud-alarm hidden" id="hud-alarm">ТРЕВОГА</div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-frag"><span class="gem"></span><span id="hud-frag">0/0</span></div>
+      <div class="hud-time" id="hud-time">00:00</div>
+    </div>
+    <div class="hud-sus" id="hud-sus"><i></i></div>
+    <div class="hud-prompt hidden" id="hud-prompt"></div>
+    <div class="hud-hint hidden" id="hud-hint"></div>
+    <div class="hud-debug hidden" id="hud-debug"></div>
+  </div>
+
+  <!-- touch controls -->
+  <div id="touch" class="hidden">
+    <div class="tpad left">
+      <button data-t="left" aria-label="Влево">◀</button>
+      <button data-t="right" aria-label="Вправо">▶</button>
+      <button data-t="down" class="small" aria-label="Вниз">▼</button>
+    </div>
+    <div class="tpad right">
+      <button data-t="slow" class="small" aria-label="Замедление">⧗</button>
+      <button data-t="act" aria-label="Взлом">E</button>
+      <button data-t="jump" class="big" aria-label="Прыжок">▲</button>
+    </div>
+    <div class="tpad top">
+      <button data-t="inv" class="small" aria-label="Инвентарь">▦</button>
+      <button data-t="pause" class="small" aria-label="Пауза">❚❚</button>
+    </div>
+  </div>
+
+  <!-- screens -->
+  <section class="screen" id="scr-title">
+    <div class="title-bg"></div>
+    <div class="title-wrap">
+      <h1 class="logo glitch" data-text="ЭХО КОДА"><span class="c">ЭХО</span> <span class="m">КОДА</span></h1>
+      <div class="sub">ECHOES OF THE CODE</div>
+      <nav class="menu" id="menu-main">
+        <button data-act="continue" id="btn-continue">Продолжить</button>
+        <button data-act="new">Новая игра</button>
+        <button data-act="levels">Выбор сектора</button>
+        <button data-act="inventory">Инвентарь</button>
+        <button data-act="settings">Настройки</button>
+        <button data-act="controls">Управление</button>
+        <button data-act="stats">Статистика</button>
+        <button data-act="feedback">Отзыв</button>
+        <button data-act="about">Об игре</button>
+      </nav>
+    </div>
+    <div class="ver" id="ver-title"></div>
+  </section>
+
+  <section class="screen panel-screen" id="scr-levels">
+    <div class="panel">
+      <h2>Выбор сектора</h2>
+      <div class="level-cards menu" id="level-cards"></div>
+      <div class="menu row"><button data-back>Назад</button></div>
+    </div>
+  </section>
+
+  <section class="screen panel-screen" id="scr-pause">
+    <div class="panel narrow">
+      <h2>Пауза</h2>
+      <nav class="menu">
+        <button data-act="resume">Продолжить</button>
+        <button data-act="inventory">Инвентарь</button>
+        <button data-act="settings">Настройки</button>
+        <button data-act="controls">Управление</button>
+        <button data-act="restart">Начать сектор заново</button>
+        <button data-act="tomenu">Главное меню</button>
+      </nav>
+    </div>
+  </section>
+
+  <section class="screen panel-screen" id="scr-settings">
+    <div class="panel">
+      <h2>Настройки</h2>
+      <nav class="menu settings" id="settings-list"></nav>
+      <div class="menu row"><button data-act="reset-progress" class="danger">Сбросить прогресс</button><button data-back>Назад</button></div>
+    </div>
+  </section>
+
+  <section class="screen panel-screen" id="scr-controls">
+    <div class="panel">
+      <h2>Управление</h2>
+      <table class="keys">
+        <tr><th>Действие</th><th>Клавиатура</th><th>Геймпад</th></tr>
+        <tr><td>Бег</td><td><kbd>←</kbd><kbd>→</kbd> / <kbd>A</kbd><kbd>D</kbd></td><td>Стик / D-pad</td></tr>
+        <tr><td>Прыжок / двойной прыжок</td><td><kbd>Пробел</kbd> / <kbd>W</kbd> / <kbd>↑</kbd></td><td>A (Cross)</td></tr>
+        <tr><td>Спрыгнуть с платформы</td><td><kbd>↓</kbd> + прыжок</td><td>Вниз + A</td></tr>
+        <tr><td>Взлом терминала</td><td><kbd>E</kbd></td><td>X (Square)</td></tr>
+        <tr><td>Замедление времени (удерживать)</td><td><kbd>Shift</kbd> / <kbd>K</kbd></td><td>RB / RT</td></tr>
+        <tr><td>Инвентарь</td><td><kbd>I</kbd> / <kbd>Tab</kbd></td><td>Y (Triangle)</td></tr>
+        <tr><td>Пауза</td><td><kbd>Esc</kbd> / <kbd>P</kbd></td><td>Start</td></tr>
+        <tr><td>Отладка (FPS)</td><td><kbd>F3</kbd></td><td>—</td></tr>
+      </table>
+      <p class="note">На сенсорных экранах появляются экранные кнопки. Во время взлома повторяйте стрелки: <kbd>←↑→↓</kbd> или <kbd>WASD</kbd>.</p>
+      <div class="menu row"><button data-back>Назад</button></div>
+    </div>
+  </section>
+
+  <section class="screen panel-screen" id="scr-stats">
+    <div class="panel wide">
+      <h2>Статистика</h2>
+      <div id="stats-body"></div>
+      <div class="menu row">
+        <button data-act="export-stats">Экспорт JSON</button>
+        <button data-act="reset-stats" class="danger">Сбросить</button>
+        <button data-back>Назад</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen panel-screen" id="scr-feedback">
+    <div class="panel">
+      <h2>Отзыв об игре</h2>
+      <div class="fb">
+        <div class="fb-row"><span>Оценка</span><div class="stars menu row" id="fb-stars"></div></div>
+        <div class="fb-row"><span>Тема</span><div class="menu row" id="fb-cat"></div></div>
+        <textarea id="fb-text" maxlength="600" placeholder="Что понравилось, что мешало, где нашли ошибку…"></textarea>
+        <div class="fb-info" id="fb-info"></div>
+      </div>
+      <div class="menu row">
+        <button data-act="fb-send">Отправить</button>
+        <button data-act="fb-export">Экспорт отзывов</button>
+        <button data-back>Назад</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen panel-screen" id="scr-about">
+    <div class="panel">
+      <h2>Об игре</h2>
+      <div class="about">
+        <p><b class="c">«Эхо кода»</b> (Echoes of the Code) — 2D-платформер с элементами головоломки и стелса в сеттинге киберпанк.</p>
+        <p>Хакер по прозвищу Призрак проникает в виртуальную реальность корпорации «Нексус», чтобы восстановить утерянные данные о своём прошлом и остановить вышедший из-под контроля ИИ.</p>
+        <p class="dim">Прототип. HTML5 Canvas, JavaScript, Web Audio API. Без сторонних движков и библиотек.</p>
+        <p class="dim">Автор: Зубович Александр Игоревич, группа ОБП-32309МОгдри.<br>Московский университет «Синергия», 2026.</p>
+        <p class="dim" id="about-ver"></p>
+      </div>
+      <div class="menu row"><button data-back>Назад</button></div>
+    </div>
+  </section>
+
+  <!-- inventory (по концепту из 6 семестра) -->
+  <section class="screen" id="scr-inventory">
+    <div class="inv">
+      <div class="inv-head">
+        <div class="logo-s"><span class="c">ЭХО</span> <span class="m">КОДА</span></div>
+        <div class="inv-sub">ИНВЕНТАРЬ <i></i></div>
+      </div>
+      <aside class="inv-card">
+        <canvas id="inv-portrait" width="48" height="48"></canvas>
+        <div class="inv-name">ПРИЗРАК</div>
+        <div class="inv-role">ХАКЕР</div>
+        <div class="barcode"></div>
+        <ul class="inv-stats">
+          <li><span class="ic skull"></span><span id="inv-lvl">УРОВЕНЬ 1</span></li>
+          <li class="m"><span class="ic pulse"></span><span id="inv-rep">РЕПУТАЦИЯ // ТЕНЬ</span></li>
+          <li><span class="ic chip"></span><span>КЛАСС ХАКЕР</span></li>
+        </ul>
+        <div class="inv-implants" id="inv-implants"></div>
+      </aside>
+      <div class="inv-main">
+        <div class="inv-tab">ИНВЕНТАРЬ</div>
+        <div class="inv-count"><b id="inv-count">0</b> / 25</div>
+        <div class="inv-grid" id="inv-grid"></div>
+        <div class="inv-detail hidden" id="inv-detail"></div>
+      </div>
+      <footer class="inv-foot">
+        <span><kbd>E</kbd> АКТИВИРОВАТЬ</span>
+        <span><kbd class="m">Q</kbd> СОРТИРОВАТЬ</span>
+        <span><kbd>R</kbd> ДЕТАЛИ</span>
+        <span><kbd class="m">ESC</kbd> ВЫХОД</span>
+        <span class="inv-ver"><b class="c">ЭХО</b> // <b class="m">КОДА</b><small id="inv-ver"></small></span>
+      </footer>
+    </div>
+  </section>
+
+  <!-- hack minigame -->
+  <section class="screen" id="scr-hack">
+    <div class="hack">
+      <div class="hack-title">ВЗЛОМ ТЕРМИНАЛА <span id="hack-id"></span></div>
+      <div class="hack-seq" id="hack-seq"></div>
+      <div class="hack-timer"><i id="hack-timer"></i></div>
+      <div class="hack-msg" id="hack-msg">Повторите последовательность</div>
+      <div class="hack-pad" id="hack-pad">
+        <button data-k="left">←</button><button data-k="up">↑</button><button data-k="down">↓</button><button data-k="right">→</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- dialog -->
+  <section class="screen" id="scr-dialog">
+    <div class="dialog">
+      <canvas id="dlg-portrait" width="32" height="32"></canvas>
+      <div class="dlg-body">
+        <div class="dlg-name" id="dlg-name"></div>
+        <div class="dlg-text" id="dlg-text"></div>
+        <div class="dlg-next">▼ <small>Пробел — далее · Esc — пропустить</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen panel-screen" id="scr-complete">
+    <div class="panel">
+      <h2 class="ok">СЕКТОР ВЗЛОМАН</h2>
+      <div id="complete-body"></div>
+      <nav class="menu row">
+        <button data-act="next">Далее</button>
+        <button data-act="retry">Повторить</button>
+        <button data-act="tomenu">В меню</button>
+      </nav>
+    </div>
+  </section>
+
+  <section class="screen panel-screen" id="scr-ending">
+    <div class="panel">
+      <h2 class="ok">ЯДРО ПЕРЕЗАГРУЖЕНО</h2>
+      <div id="ending-body"></div>
+      <nav class="menu row">
+        <button data-act="feedback">Оставить отзыв</button>
+        <button data-act="tomenu">В меню</button>
+      </nav>
+    </div>
+  </section>
+
+  <div id="toasts"></div>
+  <div id="rotate" class="hidden"><div>Поверните устройство горизонтально</div></div>
+  <noscript><div class="noscript">Для игры нужен JavaScript.</div></noscript>
+</div>
+
+<script src="js/util.js"></script>
+<script src="js/levels.js"></script>
+<script src="js/world.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/input.js"></script>
+<script src="js/render.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
